@@ -1,0 +1,30 @@
+## container-pipelines.yml
+trigger:
+- none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  imageName: 'your-docker-image-name'
+  containerName: 'your-container-name'
+
+steps:
+- task: DockerInstaller@0
+  displayName: 'Install Docker'
+  inputs:
+    dockerVersion: '19.03.12'
+
+- script: |
+    echo $(DOCKER_PASSWORD) | docker login -u $(DOCKER_USERNAME) --password-stdin
+    docker build -t $(imageName) .
+    docker images
+  displayName: 'Build Docker image'
+  env:
+    DOCKER_USERNAME: $(dockerUsername)
+    DOCKER_PASSWORD: $(dockerPassword)
+
+- script: |
+    docker run -d --name $(containerName) $(imageName)
+    docker ps -a
+  displayName: 'Run Docker container'
